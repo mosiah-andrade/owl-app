@@ -1,13 +1,32 @@
 @import "tailwindcss";
 
+
 :root {
-  --background: #ffffff;
+  --background: #FFF8FA;
   --foreground: #171717;
+  --rosa-200: #F9E0E3;
+  --rosa-300: #F2C6CC;
+  --rosa-400: #E99BA7;
+  --rosa-500: #E07A8D;
+  --rosa-600: #D95C73;
+  --rosa-700: #C93D5A;
+  --rosa-800: #B71F41;
+  --rosa-900: #A10028;
+  
+
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-rosa-200: var(--rosa-200);
+  --color-rosa-300: var(--rosa-300);
+  --color-rosa-400: var(--rosa-400);
+  --color-rosa-500: var(--rosa-500);
+  --color-rosa-600: var(--rosa-600);
+  --color-rosa-700: var(--rosa-700);
+  --color-rosa-800: var(--rosa-800);
+  --color-rosa-900: var(--rosa-900);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -15,12 +34,18 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
-    --foreground: #ededed;
+    --foreground: #FFF8FA;
+    --rosa-200: #F9E0E3;
+    --rosa-300: #F2C6CC;
+    --rosa-400: #E99BA7;
+    --rosa-500: #E07A8D;
+    --rosa-600: #D95C73;
+    --rosa-700: #C93D5A;
+    --rosa-800: #B71F41;
+    --rosa-900: #A10028;
   }
 }
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }

@@ -1,0 +1,24 @@
+{
+  "name": "Owl - Central de Estudos Inteligente",
+  "short_name": "Owl",
+  "description": "Sua central de estudos inteligente com revisões espaçadas automáticas.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f43f5e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/Owl-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/Owl-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
