@@ -4,15 +4,12 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development", 
   register: true,
-  skipWaiting: true,
+  // skipWaiting foi removido daqui porque já cuidamos disso no sw.js
 });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Isso avisa ao Next.js 16+ para aceitar plugins baseados em Webpack
-  experimental: {
-    turbopack: {},
-  },
+  // Configurações normais do seu Next.js aqui (se houver)
 };
 
 export default withPWA(nextConfig);
