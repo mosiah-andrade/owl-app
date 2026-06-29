@@ -6,15 +6,32 @@ interface PomodoroProps {
 }
 
 export default function PomodoroTimer({ onPomodoroEnd }: PomodoroProps) {
-  const [timeLeft, setTimeLeft] = useState(25 * 60);
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const salvo = localStorage.getItem("owl-pomodoro-time");
+    return salvo ? parseInt(salvo) : 25 * 60;
+    });
+    useEffect(() => {
+  localStorage.setItem("owl-pomodoro-time", timeLeft.toString());
+}, [timeLeft]);
   const [isActive, setIsActive] = useState(false);
   const [mode, setMode] = useState<"estudo" | "pausa">("estudo");
 
   // Funções de áudio e notificação
   const tocarAlarme = () => {
-    const audio = new Audio("/alarme.mp3");
-    audio.play().catch(e => console.log("Áudio bloqueado:", e));
-  };
+  // 1. Cria o objeto de áudio
+  const audio = new Audio("/sounds/alarme.mp3");
+  
+  // 2. Tenta tocar e captura o erro caso o browser ainda bloqueie
+  const playPromise = audio.play();
+  
+  if (playPromise !== undefined) {
+    playPromise.then(() => {
+      console.log("Alarme a tocar!");
+    }).catch(error => {
+      console.error("Bloqueio de áudio detetado. O utilizador ainda não interagiu o suficiente:", error);
+    });
+  }
+};
 
   const dispararNotificacao = (mensagem: string) => {
     if (Notification.permission === "granted") {
