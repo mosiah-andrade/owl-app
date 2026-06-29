@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import localforage from "localforage";
-import { Aula, Prova } from "../types";
+import { Aula, Prova, Revisao } from "../types";
 
 export function useGerenciador() {
 
@@ -25,7 +25,7 @@ export function useGerenciador() {
 
   // --- LÓGICA DE DATAS ---
   const hoje = new Date();
-  const hojeStr = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+  const hojeStr = new Date().toISOString().split("T")[0];
 
   const calcularDataFutura = (dataBaseStr: string, diasParaSomar: number): string => {
     const data = new Date(dataBaseStr + "T00:00:00");
@@ -35,28 +35,38 @@ export function useGerenciador() {
 
   const obterIdentificadorFaseHoje = (aula: Aula): string => {
     if (aula.dataEstudo === hojeStr) return "estudo";
-    if (aula.datasRevisao?.r1 === hojeStr) return "r1";
-    if (aula.datasRevisao?.r7 === hojeStr) return "r7";
-    if (aula.datasRevisao?.r21 === hojeStr) return "r21";
-    if (aula.datasRevisao?.r60 === hojeStr) return "r60";
+    
+    // Procura a revisão correspondente à data de hoje
+    const revHoje = Array.isArray(aula.datasRevisao) 
+        ? aula.datasRevisao.find(r => r.data === hojeStr) 
+        : null;
+
+    if (revHoje) return `r${revHoje.etapa}`; // Retorna "r1", "r2", etc.
     return "";
   };
 
-  const aulasDeHoje = aulas.filter((aula) => {
-    const faseHoje = obterIdentificadorFaseHoje(aula);
-    if (!faseHoje) return false;
-    const jaConcluidoHoje = aula.revisoesConcluidas?.includes(faseHoje) || false;
-    const mtCicloFinalizado = (aula.estagioAtual ?? 0) >= 4;
-    return !jaConcluidoHoje && !mtCicloFinalizado;
-  });
+  const aulasDeHoje = aulas.filter(aula => {
+  // 1. É um estudo novo não concluído?
+  const estudoHoje = aula.dataEstudo === hojeStr && (aula.estagioAtual ?? 0) === 0;
+  
+  // 2. É uma revisão de hoje que NÃO foi concluída?
+  const temRevisaoPendenteHoje = Array.isArray(aula.datasRevisao) && 
+    aula.datasRevisao.some(r => r.data === hojeStr && !r.concluida);
+  
+  return estudoHoje || temRevisaoPendenteHoje;
+});
 
-  const obterTextoBadge = (aula: Aula): string => {
-    if (aula.dataEstudo === hojeStr) return "Estudo Novo 📝";
-    if (aula.datasRevisao?.r1 === hojeStr) return "Revisão 1d ⏳";
-    if (aula.datasRevisao?.r7 === hojeStr) return "Revisão 7d 🗓️";
-    if (aula.datasRevisao?.r21 === hojeStr) return "Revisão 21d 🧠";
-    return "Revisão Final 60d 🎯";
-  };
+  // 2. Substitui o obterTextoBadge
+    const obterTextoBadge = (aula: Aula): string => {
+        if (aula.dataEstudo === hojeStr) return "Estudo Novo 📝";
+        
+        const revHoje = Array.isArray(aula.datasRevisao) 
+            ? aula.datasRevisao.find(r => r.data === hojeStr && !r.concluida) 
+            : null;
+
+        if (revHoje) return `Revisão R${revHoje.etapa} ⏳`;
+        return "Revisão Pendente";
+    };
 
   // --- EFEITOS DE INICIALIZAÇÃO ---
   useEffect(() => {
@@ -106,25 +116,36 @@ export function useGerenciador() {
     setAulaSelecionada(aula);
     setIsDetalhesOpen(true);
   };
-
-  const handleSalvarAula = async (novaAulaDados: Omit<Aula, "id" | "datasRevisao" | "estagioAtual" | "revisoesConcluidas">) => {
-    const datasRevisao = {
-      r1: calcularDataFutura(novaAulaDados.dataEstudo, 1),
-      r7: calcularDataFutura(novaAulaDados.dataEstudo, 7),
-      r21: calcularDataFutura(novaAulaDados.dataEstudo, 21),
-      r60: calcularDataFutura(novaAulaDados.dataEstudo, 60),
+  // 1. Função auxiliar para calcular datas
+const calcularProximasRevisoes = (dataBase: Date): Revisao[] => {
+  const dias = [1, 7, 21]; // R1, R2, R3
+  return dias.map((d, index) => {
+    const novaData = new Date(dataBase);
+    novaData.setDate(novaData.getDate() + d);
+    return {
+      etapa: index + 1,
+      data: novaData.toISOString().split("T")[0],
+      concluida: false
     };
-    const novaAula: Aula = { id: crypto.randomUUID(), ...novaAulaDados, datasRevisao, estagioAtual: 0, revisoesConcluidas: [] };
-    const lista = [...aulas, novaAula];
-    
-    setAulas(lista);
-    await localforage.setItem("@owl:aulas", lista);
-    
-    if ("serviceWorker" in navigator) {
-      const reg = await navigator.serviceWorker.ready;
-      if (reg.active) reg.active.postMessage({ type: "CHECAR_REVISOES_DIARIAS" });
-    }
+  });
+};
+
+ const handleSalvarAula = async (novaAulaDados: Omit<Aula, "id" | "datasRevisao" | "estagioAtual" | "revisoesConcluidas">) => {
+  // Cria o array de revisões baseado na data de estudo
+  const novasDatas = calcularProximasRevisoes(new Date(novaAulaDados.dataEstudo));
+  
+  const novaAula: Aula = { 
+    id: crypto.randomUUID(), 
+    ...novaAulaDados, 
+    datasRevisao: novasDatas, // Agora guarda o array correto
+    estagioAtual: 0, 
+    revisoesConcluidas: [] 
   };
+  
+  const lista = [...aulas, novaAula];
+  setAulas(lista);
+  await localforage.setItem("@owl:aulas", lista);
+};
 
   const handleAtualizarAula = async (aulaAtualizada: Aula) => {
     const lista = aulas.map((a) => (a.id === aulaAtualizada.id ? aulaAtualizada : a));
@@ -141,14 +162,26 @@ export function useGerenciador() {
     setIsDetalhesOpen(false);
   };
 
- const handleConcluirTarefa = async (aulaId: string) => {
-    const lista = aulas.map((aula) => {
-      if (aula.id !== aulaId) return aula;
-      const faseHoje = obterIdentificadorFaseHoje(aula);
-      return { ...aula, revisoesConcluidas: [...(aula.revisoesConcluidas || []), faseHoje], estagioAtual: (aula.estagioAtual ?? 0) + 1 };
-    });
-    setAulas(lista);
-    await localforage.setItem("@owl:aulas", lista);
+const handleConcluirTarefa = async (aulaId: string) => {
+  const lista = aulas.map((aula) => {
+    if (aula.id !== aulaId) return aula;
+
+    // Atualiza a etapa atual e marca a revisão de hoje como concluída
+    const novasRevisoes = Array.isArray(aula.datasRevisao) 
+      ? aula.datasRevisao.map(r => 
+          r.data === hojeStr ? { ...r, concluida: true } : r
+        )
+      : aula.datasRevisao;
+
+    return { 
+      ...aula, 
+      estagioAtual: (aula.estagioAtual ?? 0) + 1,
+      datasRevisao: novasRevisoes
+    };
+  });
+  
+  setAulas(lista);
+  await localforage.setItem("@owl:aulas", lista);
 
     // --- NOVA LÓGICA DO STREAK ---
     if (lastActiveDate !== hojeStr) {

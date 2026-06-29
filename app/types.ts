@@ -20,11 +20,15 @@ export interface Aula {
   topico?: string;
   dataEstudo: string;
   descricao?: string;
-  datasRevisao: DatasRevisao;
+  // CORREÇÃO: Agora é um array de Revisao
+  datasRevisao?: Revisao[]; 
   estagioAtual: number; 
   revisoesConcluidas: string[]; 
-  
-  // NOVOS CAMPOS:
-  conteudo?: string;         // Suas anotações ou resumo da aula
-  linksMateriais?: string[]; // Array com links de PDFs, vídeos, Notion, etc.
+  conteudo?: string;
+  linksMateriais?: string[];
+}
+export interface Revisao {
+  etapa: number; // 1, 2, 3...
+  data: string;   // YYYY-MM-DD
+  concluida: boolean;
 }
