@@ -49,3 +49,20 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+input[type="date"] {
+  min-height: 56px; /* Garante uma altura mínima para o toque */
+  background-color: rgb(249 250 251) !important; /* bg-gray-50 forçado */
+  opacity: 1 !important;
+  color: #374151 !important;
+}
+
+body {
+  /* Garante que o conteúdo respeita a barra inferior do iPhone */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Força os inputs a não darem zoom automático ao clicar (problema comum no iOS) */
+input, select, textarea {
+  font-size: 16px !important;
+}

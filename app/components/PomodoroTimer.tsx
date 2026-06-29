@@ -15,21 +15,15 @@ export default function PomodoroTimer({ onPomodoroEnd }: PomodoroProps) {
 }, [timeLeft]);
   const [isActive, setIsActive] = useState(false);
   const [mode, setMode] = useState<"estudo" | "pausa">("estudo");
+  const [audio] = useState<HTMLAudioElement | null>(
+    typeof window !== 'undefined' ? new Audio("/alarme.mp3") : null
+    );
 
   // Funções de áudio e notificação
   const tocarAlarme = () => {
-  // 1. Cria o objeto de áudio
-  const audio = new Audio("/sounds/alarme.mp3");
-  
-  // 2. Tenta tocar e captura o erro caso o browser ainda bloqueie
-  const playPromise = audio.play();
-  
-  if (playPromise !== undefined) {
-    playPromise.then(() => {
-      console.log("Alarme a tocar!");
-    }).catch(error => {
-      console.error("Bloqueio de áudio detetado. O utilizador ainda não interagiu o suficiente:", error);
-    });
+  if (audio) {
+    audio.currentTime = 0; // Reinicia o som se já tocou antes
+    audio.play().catch(e => console.error("Erro ao tocar:", e));
   }
 };
 

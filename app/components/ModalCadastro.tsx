@@ -35,8 +35,8 @@ export default function ModalCadastro({ isOpen, onClose, onSalvar }: ModalCadast
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-6 font-alan">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]">
+      <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-6 font-alan max-h-[90vh] overflow-y-auto">
         
         {/* Toggle Aula / Prova */}
         <div className="flex bg-gray-100 p-1 rounded-2xl mb-6">
@@ -50,7 +50,7 @@ export default function ModalCadastro({ isOpen, onClose, onSalvar }: ModalCadast
           <input 
             value={nome} 
             onChange={(e) => setNome(e.target.value)} 
-            className="w-full border-none bg-gray-50 p-4 rounded-2xl" 
+            className="w-full border-none bg-gray-50 p-4 rounded-2xl appearance-none text-gray-800 placeholder-gray-400" 
             placeholder={tipo === "aula" ? "Nome da Aula" : "Nome da Prova"} 
           />
 

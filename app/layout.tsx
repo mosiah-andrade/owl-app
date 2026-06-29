@@ -12,6 +12,7 @@ export const metadata = {
   title: "Owl - Central de Estudos",
   description: "Sua central de estudos inteligente",
   manifest: "/manifest.json",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover",
 };
 
 export const viewport = {
@@ -20,7 +21,6 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
 };
-
 export default function RootLayout({
   children,
 }: {
