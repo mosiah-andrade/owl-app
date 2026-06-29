@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import { useState, useEffect, useRef } from "react";
 import { Play, Pause, RotateCcw } from "lucide-react";
 
 interface PomodoroProps {
@@ -7,36 +9,34 @@ interface PomodoroProps {
 
 export default function PomodoroTimer({ onPomodoroEnd }: PomodoroProps) {
   const [timeLeft, setTimeLeft] = useState(25 * 60);
-   useEffect(() => {
+  const [isActive, setIsActive] = useState(false);
+  const [mode, setMode] = useState<"estudo" | "pausa">("estudo");
+  
+  // Usamos useRef para o áudio para evitar problemas de re-renderização no iOS
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Inicialização segura no cliente
+  useEffect(() => {
+    audioRef.current = new Audio("/alarme.mp3");
+    
     const salvo = localStorage.getItem("owl-pomodoro-time");
     if (salvo) {
       setTimeLeft(parseInt(salvo));
     }
-  }, []); // Executa apenas uma vez após a montagem
+  }, []);
 
-  // Persista no localStorage apenas após o valor mudar
+  // Persiste no localStorage
   useEffect(() => {
     localStorage.setItem("owl-pomodoro-time", timeLeft.toString());
   }, [timeLeft]);
-  const [isActive, setIsActive] = useState(false);
-  const [mode, setMode] = useState<"estudo" | "pausa">("estudo");
-  const [audio] = useState<HTMLAudioElement | null>(
-    typeof window !== 'undefined' ? new Audio("/alarme.mp3") : null
-    );
-
-  // Funções de áudio e notificação
-  const tocarAlarme = () => {
-  if (audio) {
-    audio.currentTime = 0; // Reinicia o som se já tocou antes
-    audio.play().catch(e => console.error("Erro ao tocar:", e));
-  }
-};
 
   const dispararNotificacao = (mensagem: string) => {
-    if (Notification.permission === "granted") {
-      new Notification("Owl Pomodoro", { body: mensagem });
-    } else if (Notification.permission !== "denied") {
-      Notification.requestPermission();
+    if (typeof window !== 'undefined' && "Notification" in window) {
+      if (Notification.permission === "granted") {
+        new Notification("Owl Pomodoro", { body: mensagem });
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission();
+      }
     }
   };
 
@@ -48,8 +48,8 @@ export default function PomodoroTimer({ onPomodoroEnd }: PomodoroProps) {
     } else if (isActive && timeLeft === 0) {
       setIsActive(false);
       
-      // Toca o som e notifica em ambos os casos
-      tocarAlarme();
+      // Toca o som com segurança
+      audioRef.current?.play().catch(e => console.error("Erro ao tocar:", e));
       
       if (mode === "estudo") {
         dispararNotificacao("Tempo de estudo esgotado! Hora de descansar.");
@@ -63,7 +63,7 @@ export default function PomodoroTimer({ onPomodoroEnd }: PomodoroProps) {
       }
     }
     return () => clearInterval(interval);
-  }, [isActive, timeLeft, mode, onPomodoroEnd]); // Apenas um useEffect agora
+  }, [isActive, timeLeft, mode, onPomodoroEnd]);
 
   const toggleTimer = () => setIsActive(!isActive);
   
@@ -108,7 +108,7 @@ export default function PomodoroTimer({ onPomodoroEnd }: PomodoroProps) {
       <div className="flex items-center gap-4">
         <button 
           onClick={toggleTimer}
-          className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-md transition-transform hover:scale-105 active:scale-95 ${isActive ? "bg-slate-800" : "bg-[var(--color-rosa-500)]"}`}
+          className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-md transition-transform hover:scale-105 active:scale-95 ${isActive ? "bg-slate-800" : "bg-pink-500"}`}
         >
           {isActive ? <Pause size={28} fill="white" /> : <Play size={28} fill="white" className="ml-1" />}
         </button>
