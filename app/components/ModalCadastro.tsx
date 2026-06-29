@@ -21,7 +21,6 @@ export default function ModalCadastro({ isOpen, onClose, onSalvar }: ModalCadast
   // Estado específico Aula
   const [topico, setTopico] = useState("");
 
-  if (!isOpen) return null;
 
   const handleSubmit = () => {
     if (!nome.trim()) return alert("Preencha o nome!");
@@ -34,9 +33,19 @@ export default function ModalCadastro({ isOpen, onClose, onSalvar }: ModalCadast
     onClose();
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]">
-      <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-6 font-alan max-h-[90vh] overflow-y-auto">
+    // O clique nesta div fecha o modal
+    <div 
+      className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      {/* A div interna evita que o clique dentro dela feche o modal */}
+      <div 
+        className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-6 font-alan max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()} 
+      >
         
         {/* Toggle Aula / Prova */}
         <div className="flex bg-gray-100 p-1 rounded-2xl mb-6">
@@ -50,15 +59,28 @@ export default function ModalCadastro({ isOpen, onClose, onSalvar }: ModalCadast
           <input 
             value={nome} 
             onChange={(e) => setNome(e.target.value)} 
-            className="w-full border-none bg-gray-50 p-4 rounded-2xl appearance-none text-gray-800 placeholder-gray-400" 
+            className="w-full border-none bg-gray-100 p-4 rounded-2xl appearance-none text-gray-800 placeholder-gray-500 outline-none" 
             placeholder={tipo === "aula" ? "Nome da Aula" : "Nome da Prova"} 
+            style={{ WebkitAppearance: 'none' }}
           />
 
           {tipo === "aula" && (
-            <input value={topico} onChange={(e) => setTopico(e.target.value)} className="w-full border-none bg-gray-50 p-4 rounded-2xl" placeholder="Tópico" />
+            <input 
+              value={topico} 
+              onChange={(e) => setTopico(e.target.value)} 
+              className="w-full border-none bg-gray-100 p-4 rounded-2xl appearance-none text-gray-800 placeholder-gray-500" 
+              placeholder="Tópico" 
+              style={{ WebkitAppearance: 'none' }}
+            />
           )}
 
-          <input type="date" value={data} onChange={(e) => setData(e.target.value)} className="w-full border-none bg-gray-50 p-4 rounded-2xl" />
+          <input 
+            type="date" 
+            value={data} 
+            onChange={(e) => setData(e.target.value)} 
+            className="w-full border-none bg-gray-100 p-4 rounded-2xl appearance-none text-gray-800"
+            style={{ WebkitAppearance: 'none', minHeight: '56px' }}
+          />
 
           <button onClick={handleSubmit} className="w-full py-4 bg-pink-500 text-white font-bold rounded-2xl mt-4">
             Salvar {tipo === "aula" ? "Aula" : "Prova"}
