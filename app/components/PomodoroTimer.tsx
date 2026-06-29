@@ -6,13 +6,18 @@ interface PomodoroProps {
 }
 
 export default function PomodoroTimer({ onPomodoroEnd }: PomodoroProps) {
-  const [timeLeft, setTimeLeft] = useState(() => {
+  const [timeLeft, setTimeLeft] = useState(25 * 60);
+   useEffect(() => {
     const salvo = localStorage.getItem("owl-pomodoro-time");
-    return salvo ? parseInt(salvo) : 25 * 60;
-    });
-    useEffect(() => {
-  localStorage.setItem("owl-pomodoro-time", timeLeft.toString());
-}, [timeLeft]);
+    if (salvo) {
+      setTimeLeft(parseInt(salvo));
+    }
+  }, []); // Executa apenas uma vez após a montagem
+
+  // Persista no localStorage apenas após o valor mudar
+  useEffect(() => {
+    localStorage.setItem("owl-pomodoro-time", timeLeft.toString());
+  }, [timeLeft]);
   const [isActive, setIsActive] = useState(false);
   const [mode, setMode] = useState<"estudo" | "pausa">("estudo");
   const [audio] = useState<HTMLAudioElement | null>(
