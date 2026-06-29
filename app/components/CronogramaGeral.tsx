@@ -4,9 +4,10 @@ import { Aula } from "../types";
 interface CronogramaGeralProps {
   aulas: Aula[];
   disciplinaFiltro: string; // Nova prop para o filtro
+  onAbrirDetalhes: (aula: Aula) => void; // Nova prop para abrir detalhes
 }
 
-export default function CronogramaGeral({ aulas, disciplinaFiltro }: CronogramaGeralProps) {
+export default function CronogramaGeral({ aulas, disciplinaFiltro, onAbrirDetalhes }: CronogramaGeralProps) {
   const formatarDataBR = (dataStr: string) => {
     if (!dataStr) return "";
     const [ano, mes, dia] = dataStr.split("-");
@@ -30,7 +31,7 @@ export default function CronogramaGeral({ aulas, disciplinaFiltro }: CronogramaG
         const progressoIndividual = Math.round(((aula.estagioAtual ?? 0) / 4) * 100);
 
         return (
-          <li key={aula.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100 flex flex-col gap-2 transition-all">
+          <li key={aula.id} onClick={() => onAbrirDetalhes(aula)} className="p-4 bg-gray-50 rounded-xl border border-gray-100 flex flex-col gap-2 transition-all">
             <div className="flex justify-between items-start">
               <div>
                 <h4 className="font-bold text-gray-800 leading-tight">{aula.nomeAula}</h4>

@@ -1,3 +1,11 @@
+// app/types.ts
+
+export interface Prova {
+  id: string;
+  disciplina: string;
+  nomeProva: string;
+  dataProva: string; // formato YYYY-MM-DD
+}
 export interface DatasRevisao {
   r1: string;
   r7: string;
@@ -13,7 +21,10 @@ export interface Aula {
   dataEstudo: string;
   descricao?: string;
   datasRevisao: DatasRevisao;
-  // Novos campos para os requisitos obrigatórios:
-  estagioAtual: number; // 0 = Novo, 1 = 1d, 2 = 7d, 3 = 21d, 4 = 60d (Concluído)
-  revisoesConcluidas: string[]; // Salva os estágios feitos, ex: ["estudo", "r1"]
+  estagioAtual: number; 
+  revisoesConcluidas: string[]; 
+  
+  // NOVOS CAMPOS:
+  conteudo?: string;         // Suas anotações ou resumo da aula
+  linksMateriais?: string[]; // Array com links de PDFs, vídeos, Notion, etc.
 }
