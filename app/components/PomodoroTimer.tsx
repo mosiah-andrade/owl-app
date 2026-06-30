@@ -12,12 +12,13 @@ export default function PomodoroTimer({ onPomodoroEnd }: PomodoroProps) {
   const [isActive, setIsActive] = useState(false);
   const [mode, setMode] = useState<"estudo" | "pausa">("estudo");
   
-  // Usamos useRef para o áudio para evitar problemas de re-renderização no iOS
+  // Usamos useRef para o áudio para evitar problemas de re-renderização
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Inicialização segura no cliente
+  // Inicialização segura no lado do cliente
   useEffect(() => {
     audioRef.current = new Audio("/alarme.mp3");
+    audioRef.current.load(); // Pré-carrega o áudio
     
     const salvo = localStorage.getItem("owl-pomodoro-time");
     if (salvo) {
@@ -25,51 +26,55 @@ export default function PomodoroTimer({ onPomodoroEnd }: PomodoroProps) {
     }
   }, []);
 
-  // Persiste no localStorage
+  // Persiste o tempo no localStorage
   useEffect(() => {
     localStorage.setItem("owl-pomodoro-time", timeLeft.toString());
   }, [timeLeft]);
 
-  const dispararNotificacao = (mensagem: string) => {
-    if (typeof window !== 'undefined' && "Notification" in window) {
-      if (Notification.permission === "granted") {
-        new Notification("Owl Pomodoro", { body: mensagem });
-      } else if (Notification.permission !== "denied") {
-        Notification.requestPermission();
-      }
-    }
-  };
-
+  // Lógica principal do Timer
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    if (!isActive) return;
 
-    if (isActive && timeLeft > 0) {
-      interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-    } else if (isActive && timeLeft === 0) {
-      setIsActive(false);
-      
-      // Toca o som com segurança
-      audioRef.current?.play().catch(e => console.error("Erro ao tocar:", e));
-      
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          handleTimerEnd();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isActive, mode]);
+
+  const handleTimerEnd = () => {
+    setIsActive(false);
+    
+    // Tenta tocar o áudio com segurança.
+    audioRef.current?.play().catch((e) => console.log("Áudio bloqueado pelo navegador:", e));
+    
+    // Pequeno atraso (500ms) para garantir que a interface não trave 
+    // ao processar o som e a mudança de estado simultaneamente.
+    setTimeout(() => {
       if (mode === "estudo") {
-        dispararNotificacao("Tempo de estudo esgotado! Hora de descansar.");
-        onPomodoroEnd(); 
+        onPomodoroEnd();
         setMode("pausa");
         setTimeLeft(5 * 60);
       } else {
-        dispararNotificacao("Pausa terminada! Vamos voltar ao foco?");
         setMode("estudo");
         setTimeLeft(25 * 60);
       }
-    }
-    return () => clearInterval(interval);
-  }, [isActive, timeLeft, mode, onPomodoroEnd]);
+    }, 500);
+  };
 
   const toggleTimer = () => setIsActive(!isActive);
   
   const resetTimer = () => {
     setIsActive(false);
-    setTimeLeft(mode === "estudo" ? 25 * 60 : 5 * 60);
+    const novoTempo = mode === "estudo" ? 25 * 60 : 5 * 60;
+    setTimeLeft(novoTempo);
   };
 
   const switchMode = (newMode: "estudo" | "pausa") => {
