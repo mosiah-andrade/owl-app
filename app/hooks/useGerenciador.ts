@@ -22,6 +22,9 @@ export function useGerenciador() {
   const [isGerenciarOpen, setIsGerenciarOpen] = useState(false);
   const [abaAtiva, setAbaAtiva] = useState<"hoje" | "painel" | "provas">("hoje");
   const [disciplinaSelecionada, setDisciplinaSelecionada] = useState("Todas");
+  const [isModalProvaOpen, setIsModalProvaOpen] = useState(false);
+  const [provaSelecionada, setProvaSelecionada] = useState<Prova | null>(null);
+  const [isDetalhesProvaOpen, setIsDetalhesProvaOpen] = useState(false);
 
   // --- LÓGICA DE DATAS ---
   const hoje = new Date();
@@ -97,6 +100,12 @@ export function useGerenciador() {
     });
   }, [isModalOpen]); 
 
+
+
+  const abrirDetalhesProva = (prova: Prova) => {
+  setProvaSelecionada(prova);
+  setIsDetalhesProvaOpen(true);
+};
 
   const handleSalvarProva = async (dados: Omit<Prova, "id">) => {
     const novaProva: Prova = { id: crypto.randomUUID(), ...dados };
@@ -208,15 +217,6 @@ const handleConcluirTarefa = async (aulaId: string) => {
 
   // --- RETORNO DO HOOK ---
   return {
-    provas, setProvas, handleSalvarProva, handleExcluirProva,
-    isPomodoroFinished, setIsPomodoroFinished,
-    streak, aulas, aulasDeHoje, disciplinasDisponiveis,
-    aulaSelecionada, setAulaSelecionada,
-    isDetalhesOpen, setIsDetalhesOpen,
-    isModalOpen, setIsModalOpen,
-    isGerenciarOpen, setIsGerenciarOpen,
-    abaAtiva, setAbaAtiva,
-    disciplinaSelecionada, setDisciplinaSelecionada,
-    obterTextoBadge, abrirDetalhesAula, handleSalvarAula, handleAtualizarAula, handleExcluirAula, handleConcluirTarefa, handleExcluirDisciplina
+    provaSelecionada, isDetalhesProvaOpen, setIsDetalhesProvaOpen, abrirDetalhesProva, isModalProvaOpen, setIsModalProvaOpen, provas, setProvas, handleSalvarProva, handleExcluirProva, isPomodoroFinished, setIsPomodoroFinished, streak, aulas, aulasDeHoje, disciplinasDisponiveis, aulaSelecionada, setAulaSelecionada,isDetalhesOpen, setIsDetalhesOpen,isModalOpen, setIsModalOpen,isGerenciarOpen, setIsGerenciarOpen,abaAtiva, setAbaAtiva,disciplinaSelecionada, setDisciplinaSelecionada,obterTextoBadge, abrirDetalhesAula, handleSalvarAula, handleAtualizarAula, handleExcluirAula, handleConcluirTarefa,handleExcluirDisciplina
   };
 }

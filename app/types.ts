@@ -5,6 +5,7 @@ export interface Prova {
   disciplina: string;
   nomeProva: string;
   dataProva: string; // formato YYYY-MM-DD
+  informacoes?: string; // campo opcional para informações adicionais
 }
 export interface DatasRevisao {
   r1: string;

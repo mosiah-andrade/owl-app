@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Play, Pause, RotateCcw, VolumeX } from "lucide-react";
+import { Play, Pause, RotateCcw, VolumeX, Check } from "lucide-react";
 
 interface PomodoroProps {
   onPomodoroEnd: () => void;
@@ -17,8 +17,7 @@ export default function PomodoroTimer({ onPomodoroEnd }: PomodoroProps) {
 
   useEffect(() => {
     audioRef.current = new Audio("/alarme.mp3");
-    audioRef.current.loop = true; // Loop para garantir que você ouça até parar
-    
+    audioRef.current.loop = true;
     const salvo = localStorage.getItem("owl-pomodoro-time");
     if (salvo) setTimeLeft(parseInt(salvo));
   }, []);
@@ -29,25 +28,23 @@ export default function PomodoroTimer({ onPomodoroEnd }: PomodoroProps) {
 
   useEffect(() => {
     if (!isActive) return;
-
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
-          triggerAlarm();
+          handleTimerEnd();
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(interval);
   }, [isActive]);
 
-  const triggerAlarm = () => {
+  const handleTimerEnd = () => {
     setIsActive(false);
     setIsAlarmPlaying(true);
-    audioRef.current?.play().catch(e => console.log("Áudio bloqueado:", e));
+    audioRef.current?.play().catch((e) => console.log("Áudio aguardando interação:", e));
   };
 
   const stopAlarm = () => {
@@ -56,69 +53,55 @@ export default function PomodoroTimer({ onPomodoroEnd }: PomodoroProps) {
       audioRef.current.currentTime = 0;
     }
     setIsAlarmPlaying(false);
-    
-    // Troca o modo após parar o som manualmente
-    if (mode === "estudo") {
-      onPomodoroEnd();
-      setMode("pausa");
-      setTimeLeft(5 * 60);
-    } else {
-      setMode("estudo");
-      setTimeLeft(25 * 60);
-    }
-  };
-
-  const toggleTimer = () => setIsActive(!isActive);
-  
-  const resetTimer = () => {
-    setIsActive(false);
-    setTimeLeft(mode === "estudo" ? 25 * 60 : 5 * 60);
-  };
-
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
-    const s = (seconds % 60).toString().padStart(2, "0");
-    return `${m}:${s}`;
+    // Troca automática para o próximo modo ao parar o alarme
+    const nextMode = mode === "estudo" ? "pausa" : "estudo";
+    if (mode === "estudo") onPomodoroEnd();
+    setMode(nextMode);
+    setTimeLeft(nextMode === "estudo" ? 25 * 60 : 5 * 60);
   };
 
   return (
-    <div className="w-full bg-white rounded-2xl p-5 mb-6 shadow-sm border border-gray-100 flex flex-col items-center justify-center relative">
-      {/* Botão de Emergência para Parar o Som */}
-      {isAlarmPlaying && (
-        <button 
-          onClick={stopAlarm}
-          className="absolute top-2 right-2 bg-red-500 text-white p-3 rounded-full shadow-lg animate-pulse z-50"
+    <div 
+        className={`w-full rounded-3xl p-6 mb-6 shadow-xl border border-white/20 flex flex-col items-center justify-center relative overflow-hidden transition-all duration-700 bg-[length:200%_200%] animate-gradient-flow ${
+            mode === "estudo" 
+            ? "bg-gradient-to-br from-pink-100 via-white to-pink-50" 
+            : "bg-gradient-to-br from-blue-100 via-white to-blue-50"
+        }`}
         >
-          <VolumeX size={24} />
-        </button>
+      
+      {/* Luzes de fundo (decorativas) */}
+      <div className={`absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-30 ${mode === "estudo" ? "bg-pink-400" : "bg-blue-400"}`} />
+      <div className={`absolute -bottom-20 -left-20 w-40 h-40 rounded-full blur-3xl opacity-30 ${mode === "estudo" ? "bg-pink-400" : "bg-blue-400"}`} />
+      {/* Overlay de Alarme - UX muito mais intuitiva */}
+      {isAlarmPlaying && (
+        <div className="absolute inset-0 z-20 bg-slate-900/95 flex flex-col items-center justify-center text-white p-6 animate-in fade-in">
+          <h2 className="text-2xl font-bold mb-2">Tempo Esgotado!</h2>
+          <p className="mb-8 opacity-80">{mode === "estudo" ? "Hora de descansar" : "Hora de focar"}</p>
+          <button 
+            onClick={stopAlarm}
+            className="flex items-center gap-2 bg-white text-slate-900 px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:scale-105 transition-transform"
+          >
+            <Check size={24} /> {mode === "estudo" ? "Iniciar Pausa" : "Iniciar Foco"}
+          </button>
+        </div>
       )}
 
-      <div className="flex bg-gray-50 p-1 rounded-full mb-4 border border-gray-100">
-        <div className={`text-xs font-bold px-4 py-1.5 rounded-full ${mode === "estudo" ? "bg-white text-pink-500 shadow-sm" : "text-gray-400"}`}>
-          {mode === "estudo" ? "Foco" : "Pausa"}
-        </div>
+      {/* Seletor de Modo */}
+      <div className="flex bg-gray-100 p-1 rounded-2xl mb-6 border border-gray-200">
+        <button onClick={() => { stopAlarm(); setMode("estudo"); setTimeLeft(25*60); setIsActive(false); }} className={`px-6 py-2 rounded-xl font-bold transition-all ${mode === "estudo" ? "bg-white text-pink-500 shadow-sm" : "text-gray-400"}`}>Foco</button>
+        <button onClick={() => { stopAlarm(); setMode("pausa"); setTimeLeft(5*60); setIsActive(false); }} className={`px-6 py-2 rounded-xl font-bold transition-all ${mode === "pausa" ? "bg-white text-blue-500 shadow-sm" : "text-gray-400"}`}>Pausa</button>
       </div>
 
-      <span className="text-6xl font-extrabold tracking-tighter mb-5 text-slate-800">
-        {formatTime(timeLeft)}
+      <span className={`text-7xl font-mono font-bold tracking-tighter mb-8 ${isAlarmPlaying ? "animate-pulse text-red-500" : mode === "estudo" ? "text-slate-800" : "text-blue-500"}`}>
+        {Math.floor(timeLeft / 60).toString().padStart(2, "0")}:{ (timeLeft % 60).toString().padStart(2, "0")}
       </span>
       
-      <div className="flex items-center gap-4">
-        {!isAlarmPlaying ? (
-          <>
-            <button onClick={toggleTimer} className="w-14 h-14 rounded-full flex items-center justify-center bg-pink-500 text-white shadow-md">
-              {isActive ? <Pause size={28} fill="white" /> : <Play size={28} fill="white" />}
-            </button>
-            <button onClick={resetTimer} className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-500">
-              <RotateCcw size={18} />
-            </button>
-          </>
-        ) : (
-          <button onClick={stopAlarm} className="bg-red-500 text-white px-6 py-2 rounded-full font-bold">
-            Parar Alarme
-          </button>
-        )}
-      </div>
+      <button 
+        onClick={() => setIsActive(!isActive)}
+        className={`w-20 h-20 rounded-full flex items-center justify-center text-white shadow-lg transition-all ${isActive ? "bg-slate-800" : "bg-pink-500 hover:bg-pink-600"}`}
+      >
+        {isActive ? <Pause size={32} fill="white" /> : <Play size={32} fill="white" className="ml-1" />}
+      </button>
     </div>
   );
 }

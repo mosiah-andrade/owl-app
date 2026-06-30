@@ -15,6 +15,7 @@ import ListaProvas from "./components/ListaProvas";
 import ModalCadastro from "./components/ModalCadastro";
 import ModalDetalhesAula from "./components/ModalDetalhesAula";
 import ModalGerenciarMaterias from "./components/ModalGerenciarMaterias";
+import ModalProva from "./components/ModalProva";
 
 export default function Home() {
   const G = useGerenciador(); // "G" de Gerenciador. Importamos tudo de uma vez!
@@ -49,6 +50,20 @@ export default function Home() {
             }
           }} 
         />
+        <ModalProva 
+          isOpen={G.isModalProvaOpen || G.isDetalhesProvaOpen}
+          onClose={() => {
+            G.setIsModalProvaOpen(false);
+            G.setIsDetalhesProvaOpen(false);
+          }}
+          prova={G.provaSelecionada} // Se null, é criação; se tiver dados, é edição
+          onSalvar={(dados) => {
+            G.handleSalvarProva(dados); // Ajuste se precisar de lógica de Update
+            G.setIsModalProvaOpen(false);
+          }}
+          onExcluir={G.handleExcluirProva}
+        />
+        
         <ModalDetalhesAula isOpen={G.isDetalhesOpen} onClose={() => G.setIsDetalhesOpen(false)} aula={G.aulaSelecionada} onAtualizar={G.handleAtualizarAula} onExcluir={G.handleExcluirAula} />
         <ModalGerenciarMaterias isOpen={G.isGerenciarOpen} onClose={() => G.setIsGerenciarOpen(false)} disciplinas={G.disciplinasDisponiveis} onExcluir={G.handleExcluirDisciplina} />
 
@@ -84,7 +99,11 @@ export default function Home() {
           </div>
           
           {G.abaAtiva === "provas" ? (
-              <ListaProvas provas={G.provas} onExcluir={G.handleExcluirProva} />
+              <ListaProvas 
+                provas={G.provas} 
+                onExcluir={G.handleExcluirProva} 
+                onAbrirDetalhes={G.abrirDetalhesProva} 
+              />
             ) : G.abaAtiva === "hoje" ? (
             <ListaHoje 
               aulas={G.aulasDeHoje} 
